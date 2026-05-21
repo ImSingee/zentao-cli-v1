@@ -43,6 +43,8 @@ import type { Workspace } from '../src/types/config';
         expect(actions).toContain('resolve');
         expect(actions).toContain('close');
         expect(actions).toContain('activate');
+        expect(actions).toContain('confirm');
+        expect(bug.actions.every((a) => a.apiVersion === 'v1')).toBe(true);
     });
 
     test('task module has correct actions', () => {
@@ -61,11 +63,12 @@ import type { Workspace } from '../src/types/config';
         expect(listAction!.name).toBe('list');
     });
 
-    test('bug module has no top-level list', () => {
+    test('bug module uses v1 product-scoped list', () => {
         const bug = getModule('bug')!;
         const listAction = findAction(bug, 'list');
         expect(listAction).toBeDefined();
-        expect(listAction!.path).toBe('/{scope}/{scopeID}/bugs');
+        expect(listAction!.path).toBe('/products/{productID}/bugs');
+        expect(listAction!.apiVersion).toBe('v1');
     });
 });
 
@@ -87,6 +90,46 @@ describe('module resolver', () => {
         const mod = getModule('bug')!;
         const action = findAction(mod, 'action', 'resolve')!;
         expect(resolveActionUrl(action, { bugID: 5 })).toBe('/bugs/5/resolve');
+        expect(action.method).toBe('post');
+    });
+
+    test('resolves v1 bug list path and paging params', () => {
+        const mod = getModule('bug')!;
+        const command = resolveModuleCommand(
+            mod,
+            'list',
+            { product: '10', page: '2', recPerPage: '50' },
+            [],
+        );
+
+        expect(command.path).toBe('/products/10/bugs');
+        expect(command.query).toEqual({ page: '2', limit: '50' });
+        expect(command.action.apiVersion).toBe('v1');
+    });
+
+    test('resolves v1 bug create path from product option', () => {
+        const mod = getModule('bug')!;
+        const command = resolveModuleCommand(
+            mod,
+            'create',
+            {
+                product: '10',
+                title: 'Bug title',
+                severity: '2',
+                pri: '1',
+                type: 'codeerror',
+            } as any,
+            [],
+        );
+
+        expect(command.path).toBe('/products/10/bugs');
+        expect(command.data).toMatchObject({
+            title: 'Bug title',
+            severity: 2,
+            pri: 1,
+            type: 'codeerror',
+        });
+        expect(command.action.apiVersion).toBe('v1');
     });
 
     test('throws for unknown action', () => {

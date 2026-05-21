@@ -15,6 +15,7 @@ export interface ClientOptions {
  */
 export class ZentaoClient {
     readonly baseUrl: string;
+    private serverUrl: string;
     private token: string;
     private timeout: number;
     private insecure: boolean;
@@ -26,10 +27,15 @@ export class ZentaoClient {
      */
     constructor(serverUrl: string, token: string, options?: ClientOptions) {
         const url = serverUrl.replace(/\/+$/, '');
+        this.serverUrl = url;
         this.baseUrl = `${url}/api.php/v2`;
         this.token = token;
         this.timeout = options?.timeout ?? 10000;
         this.insecure = options?.insecure ?? false;
+    }
+
+    private getApiBaseUrl(apiVersion: 'v1' | 'v2' = 'v2'): string {
+        return `${this.serverUrl}/api.php/${apiVersion}`;
     }
 
     /**
@@ -42,7 +48,7 @@ export class ZentaoClient {
         path: string,
         options?: RequestOptions,
     ): Promise<T> {
-        let url = `${this.baseUrl}${path}`;
+        let url = `${this.getApiBaseUrl(options?.apiVersion)}${path}`;
         if (options?.query) {
             const search = new URLSearchParams();
             for (const [key, value] of Object.entries(options.query)) {

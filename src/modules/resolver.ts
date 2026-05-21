@@ -110,6 +110,8 @@ export function resolveModuleCommand(
             if (key === 'scope' || key === 'scopeID' || pathValues[key] !== undefined) continue;
             if (params[key] !== undefined) {
                 pathValues[key] = params[key] as string | number;
+            } else if (key.endsWith('ID') && params[key.slice(0, -2)] !== undefined) {
+                pathValues[key] = params[key.slice(0, -2)] as string | number;
             } else {
                 const def = action.pathParams[key];
                 if (typeof def === 'object') {
@@ -136,6 +138,8 @@ export function resolveModuleCommand(
             if (value === undefined) {
                 if (param.name === 'pageID' && params.page) {
                     value = params.page;
+                } else if (param.name === 'limit' && params.recPerPage) {
+                    value = params.recPerPage;
                 }
             }
             if (value === undefined) {
@@ -329,5 +333,4 @@ export function extractPager(action: ModuleAction, response: Record<string, unkn
     }
     return undefined;
 }
-
 

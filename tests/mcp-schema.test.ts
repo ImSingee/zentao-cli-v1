@@ -33,7 +33,7 @@ describe('MCP tool input JSON Schema', () => {
         expect(json.properties && 'params' in json.properties).toBe(true);
     });
 
-    test('z.record(z.unknown()) breaks Zod 4 JSON Schema conversion (regression guard)', () => {
+    test('converts z.record(z.unknown()) params field', () => {
         const actionEnum = ['list', 'get'] as [string, ...string[]];
         const shape = {
             action: z.enum(actionEnum),
@@ -44,12 +44,12 @@ describe('MCP tool input JSON Schema', () => {
         const norm = normalizeObjectSchema(wrapped);
         expect(norm).toBeDefined();
 
-        expect(() =>
-            toJsonSchemaCompat(norm!, {
-                strictUnions: true,
-                pipeStrategy: 'input',
-            }),
-        ).toThrow();
+        const json = toJsonSchemaCompat(norm!, {
+            strictUnions: true,
+            pipeStrategy: 'input',
+        });
+
+        expect(json.properties.params).toBeDefined();
     });
 
     test('converts simple string and number fields', () => {

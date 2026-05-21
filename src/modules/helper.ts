@@ -1,5 +1,5 @@
 import { ModuleDefinition } from "../types";
-import { MODULES } from "./registry";
+import { MODULES } from "./overrides";
 
 const moduleNames = MODULES.map(x => x.name);
 

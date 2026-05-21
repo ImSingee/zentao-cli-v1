@@ -57,6 +57,24 @@ describe('ZentaoClient HTTP behavior', () => {
         }
     });
 
+    test('can request v1 API endpoints', async () => {
+        let receivedPath: string | undefined;
+        const server = createMockServer((req) => {
+            const url = new URL(req.url);
+            receivedPath = url.pathname;
+            return Response.json({ id: 1, title: 'Bug' });
+        });
+
+        try {
+            const client = makeClient(server);
+            await client.request('get', '/bugs/1', { apiVersion: 'v1' });
+        } finally {
+            server.stop();
+        }
+
+        expect(receivedPath).toBe('/api.php/v1/bugs/1');
+    });
+
     test('setToken updates token for subsequent requests', async () => {
         let receivedToken: string | undefined;
         const server = createMockServer((req) => {
