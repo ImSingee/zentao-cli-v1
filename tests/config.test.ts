@@ -367,6 +367,11 @@ describe('buildProfile', () => {
         expect(profile.lastUsedTime).toBeDefined();
     });
 
+    test('stores plaintext password when provided', () => {
+        const profile = buildProfile('https://zentao.example.com', 'admin', 'tok123', undefined, undefined, undefined, 'secret');
+        expect(profile.password).toBe('secret');
+    });
+
     test('strips trailing slashes from server', () => {
         const profile = buildProfile('https://zentao.example.com/', 'admin', 'tok');
         expect(profile.server).toBe('https://zentao.example.com');
@@ -382,6 +387,15 @@ describe('buildProfile', () => {
         expect(profile.workspaces).toEqual(old.workspaces);
         expect(profile.config).toEqual(old.config);
         expect(profile.token).toBe('new-tok');
+    });
+
+    test('preserves existing plaintext password when refreshing profile without a new password', () => {
+        const old: Profile = {
+            ...mockProfile,
+            password: 'old-secret',
+        };
+        const profile = buildProfile('https://zentao.example.com', 'admin', 'new-tok', undefined, undefined, old);
+        expect(profile.password).toBe('old-secret');
     });
 
     test('merges user info from oldProfile', () => {

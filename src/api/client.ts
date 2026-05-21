@@ -7,6 +7,8 @@ export interface ClientOptions {
     insecure?: boolean;
     /** 默认请求超时（毫秒），可被单次 {@link RequestOptions.timeout} 覆盖 */
     timeout?: number;
+    /** Token 失效时刷新 Token，返回新 Token 后当前请求会自动重试一次 */
+    onTokenExpired?: () => Promise<string | undefined>;
 }
 
 /**
@@ -19,6 +21,7 @@ export class ZentaoClient {
     private token: string;
     private timeout: number;
     private insecure: boolean;
+    private onTokenExpired?: () => Promise<string | undefined>;
 
     /**
      * @param serverUrl 禅道站点根地址，如 `https://zentao.example.com`（末尾 `/` 会被去掉）
@@ -32,6 +35,7 @@ export class ZentaoClient {
         this.token = token;
         this.timeout = options?.timeout ?? 10000;
         this.insecure = options?.insecure ?? false;
+        this.onTokenExpired = options?.onTokenExpired;
     }
 
     private getApiBaseUrl(apiVersion: 'v1' | 'v2' = 'v2'): string {
@@ -47,6 +51,15 @@ export class ZentaoClient {
         method: string,
         path: string,
         options?: RequestOptions,
+    ): Promise<T> {
+        return this.requestOnce<T>(method, path, options, true);
+    }
+
+    private async requestOnce<T extends ApiResponse = ApiResponse>(
+        method: string,
+        path: string,
+        options: RequestOptions | undefined,
+        allowTokenRefresh: boolean,
     ): Promise<T> {
         let url = `${this.getApiBaseUrl(options?.apiVersion)}${path}`;
         if (options?.query) {
@@ -86,7 +99,7 @@ export class ZentaoClient {
             clearTimeout(timer);
 
             if (!response.ok) {
-                return this.handleHttpError(response);
+                await this.handleHttpError(response);
             }
 
             const responseText = await response.text();
@@ -102,6 +115,13 @@ export class ZentaoClient {
             return data;
         } catch (error) {
             clearTimeout(timer);
+            if (error instanceof ZentaoError && error.code === '1004' && allowTokenRefresh && this.onTokenExpired) {
+                const token = await this.onTokenExpired();
+                if (token) {
+                    this.setToken(token);
+                    return this.requestOnce<T>(method, path, options, false);
+                }
+            }
             if (error instanceof ZentaoError) throw error;
             if (error instanceof DOMException && error.name === 'AbortError') {
                 throw new ZentaoError('E5001');

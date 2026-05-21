@@ -60,7 +60,7 @@ export function registerLoginCommand(program: Command): void {
                         timeout: globalOpts.timeout,
                     });
 
-                    profile = buildProfile(server, account, result.token, result.serverConfig, result.user, oldProfile);
+                    profile = buildProfile(server, account, result.token, result.serverConfig, result.user, oldProfile, password);
                 }
 
                 saveProfile(profile);

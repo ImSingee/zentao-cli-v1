@@ -199,13 +199,14 @@ export function getConfigPath(): string {
  * 构建或更新 Profile。
  * 若传入 `oldProfile`，会合并 `workspaces`、`config` 等已有字段，并合并 `user` 信息。
  */
-export function buildProfile(server: string, account: string, token: string, serverConfig?: ServerConfig, user?: Record<string, unknown>, oldProfile?: Profile): Profile {
+export function buildProfile(server: string, account: string, token: string, serverConfig?: ServerConfig, user?: Record<string, unknown>, oldProfile?: Profile, password?: string): Profile {
     const now = new Date().toISOString();
     return {
         ...oldProfile,
         server: server.replace(/\/+$/, ''),
         account,
         token,
+        password: password ?? oldProfile?.password,
         user: oldProfile ? {
             ...oldProfile.user,
             ...user

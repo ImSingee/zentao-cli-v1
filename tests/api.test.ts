@@ -183,6 +183,61 @@ describe('ZentaoClient HTTP behavior', () => {
         }
     });
 
+    test('refreshes token once and retries request after 401 response', async () => {
+        const receivedTokens: Array<string | undefined> = [];
+        let refreshCount = 0;
+        const server = createMockServer((req) => {
+            receivedTokens.push(req.headers.get('Token') ?? undefined);
+            if (receivedTokens.length === 1) {
+                return new Response('Unauthorized', { status: 401 });
+            }
+            return Response.json({ status: 'success', data: { ok: true } });
+        });
+
+        try {
+            const client = new ZentaoClient(server.url.toString(), 'expired-token', {
+                async onTokenExpired() {
+                    refreshCount += 1;
+                    return 'fresh-token';
+                },
+            });
+            const result = await client.get('/test');
+
+            expect(result).toEqual({ status: 'success', data: { ok: true } });
+            expect(refreshCount).toBe(1);
+            expect(receivedTokens).toEqual(['expired-token', 'fresh-token']);
+        } finally {
+            server.stop();
+        }
+    });
+
+    test('does not retry more than once when refreshed token is also rejected', async () => {
+        let requestCount = 0;
+        let refreshCount = 0;
+        const server = createMockServer(() => {
+            requestCount += 1;
+            return new Response('Unauthorized', { status: 401 });
+        });
+
+        try {
+            const client = new ZentaoClient(server.url.toString(), 'expired-token', {
+                async onTokenExpired() {
+                    refreshCount += 1;
+                    return 'fresh-token';
+                },
+            });
+
+            await expect(client.get('/test')).rejects.toMatchObject({
+                name: 'ZentaoError',
+                code: '1004',
+            });
+            expect(refreshCount).toBe(1);
+            expect(requestCount).toBe(2);
+        } finally {
+            server.stop();
+        }
+    });
+
     test('throws E2006 on 403 response', async () => {
         const server = createMockServer(() => {
             return new Response('Forbidden', { status: 403 });

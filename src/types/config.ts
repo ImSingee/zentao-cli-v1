@@ -77,6 +77,8 @@ export interface Profile {
     account: string;
     /** API Token，通过登录接口获取 */
     token: string;
+    /** 登录密码，明文保存，用于 Token 失效时自动刷新 */
+    password?: string;
     /** 登录后获取的用户详情 */
     user?: Record<string, unknown>;
     /** 登录时间 (ISO 8601) */

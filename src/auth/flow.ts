@@ -10,6 +10,35 @@ export interface AuthContext {
     profile: Profile;
 }
 
+function createAuthenticatedClient(profile: Profile, options?: { insecure?: boolean; timeout?: number }): ZentaoClient {
+    const config = getProfileConfig(profile);
+    const clientOpts = {
+        insecure: options?.insecure ?? config.insecure,
+        timeout: options?.timeout ?? config.timeout,
+    };
+
+    return new ZentaoClient(profile.server, profile.token, {
+        ...clientOpts,
+        async onTokenExpired() {
+            if (!profile.password) return undefined;
+
+            const result = await login(profile.server, profile.account, profile.password, clientOpts);
+            const refreshed = buildProfile(
+                profile.server,
+                profile.account,
+                result.token,
+                result.serverConfig,
+                result.user,
+                profile,
+                profile.password,
+            );
+            saveProfile(refreshed);
+            Object.assign(profile, refreshed);
+            return result.token;
+        },
+    });
+}
+
 /**
  * 确保当前进程具备可用的禅道凭证。
  *
@@ -21,15 +50,10 @@ export interface AuthContext {
 export async function ensureAuth(options?: { insecure?: boolean; timeout?: number }): Promise<AuthContext> {
     const currentProfile = getCurrentProfile();
     if (currentProfile?.token) {
-        const config = getProfileConfig(currentProfile);
-        const clientOpts = {
-            insecure: options?.insecure ?? config.insecure,
-            timeout: options?.timeout ?? config.timeout,
-        };
         currentProfile.lastUsedTime = new Date().toISOString();
         saveProfile(currentProfile);
         return {
-            client: new ZentaoClient(currentProfile.server, currentProfile.token, clientOpts),
+            client: createAuthenticatedClient(currentProfile, options),
             profile: currentProfile,
         };
     }
@@ -43,7 +67,7 @@ export async function ensureAuth(options?: { insecure?: boolean; timeout?: numbe
             const profile = buildProfile(env.url, env.account, env.token, undefined, undefined, existingProfile);
             saveProfile(profile);
             return {
-                client: new ZentaoClient(env.url, env.token, clientOpts),
+                client: createAuthenticatedClient(profile, clientOpts),
                 profile,
             };
         }
@@ -51,10 +75,12 @@ export async function ensureAuth(options?: { insecure?: boolean; timeout?: numbe
         if (env.password) {
             const clientOpts = { insecure: options?.insecure, timeout: options?.timeout };
             const result = await login(env.url, env.account, env.password, clientOpts);
-            const profile = buildProfile(env.url, env.account, result.token, undefined, result.user);
+            const normalizedServer = env.url.replace(/\/+$/, '');
+            const existingProfile = getProfile(env.account, normalizedServer);
+            const profile = buildProfile(env.url, env.account, result.token, undefined, result.user, existingProfile, env.password);
             saveProfile(profile);
             return {
-                client: new ZentaoClient(env.url, result.token, clientOpts),
+                client: createAuthenticatedClient(profile, clientOpts),
                 profile,
             };
         }
