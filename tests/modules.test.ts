@@ -61,6 +61,14 @@ import type { Workspace } from '../src/types/config';
         const listAction = findAction(product, 'list');
         expect(listAction).toBeDefined();
         expect(listAction!.name).toBe('list');
+        expect(listAction!.apiVersion).toBe('v1');
+    });
+
+    test('product project and execution modules use v1 actions', () => {
+        for (const name of ['product', 'project', 'execution']) {
+            const mod = getModule(name)!;
+            expect(mod.actions.every((a) => a.apiVersion === 'v1')).toBe(true);
+        }
     });
 
     test('bug module uses v1 product-scoped list', () => {
@@ -154,8 +162,35 @@ describe('module resolver', () => {
             ['1', '--name=产品1'],
         );
         expect(command.id).toBe(1);
-        expect(command.path).toBe('/products/1');
-        expect(command.data).toMatchObject({ name: '产品1', acl: 'open' });
+        expect(command.path).toBe('/product/1');
+        expect(command.data).toMatchObject({ name: '产品1' });
+    });
+
+    test('resolves v1 project get action', () => {
+        const mod = getModule('project')!;
+        const command = resolveModuleCommand(
+            mod,
+            'get',
+            {},
+            ['12'],
+        );
+
+        expect(command.path).toBe('/projects/12');
+        expect(command.action.apiVersion).toBe('v1');
+    });
+
+    test('resolves v1 execution list path from project option', () => {
+        const mod = getModule('execution')!;
+        const command = resolveModuleCommand(
+            mod,
+            'list',
+            { project: '12', page: '2', recPerPage: '50' },
+            [],
+        );
+
+        expect(command.path).toBe('/projects/12/executions');
+        expect(command.query).toEqual({ page: '2', limit: '50' });
+        expect(command.action.apiVersion).toBe('v1');
     });
 
     test('supports positional id for delete action', () => {

@@ -11,12 +11,13 @@ describe('module executor', () => {
             async request(method: string, path: string, options: unknown) {
                 requests.push({ method, path, options });
                 return {
-                    status: 'success',
+                    page: 1,
+                    total: 2,
+                    limit: 20,
                     products: [
                         { id: 1, name: '保留', status: 'active', desc: '<p>Hello</p>' },
                         { id: 2, name: '丢弃', status: 'closed', desc: '<p>Bye</p>' },
                     ],
-                    pager: { recTotal: 2, recPerPage: 20, pageID: 1 },
                 };
             },
         } as unknown as ZentaoClient;
@@ -41,11 +42,10 @@ describe('module executor', () => {
                 method: 'get',
                 path: '/products',
                 options: {
+                    apiVersion: 'v1',
                     query: {
-                        browseType: 'all',
-                        orderBy: 'id_asc',
-                        recPerPage: '20',
-                        pageID: '1',
+                        page: '1',
+                        limit: '20',
                     },
                     body: undefined,
                 },
