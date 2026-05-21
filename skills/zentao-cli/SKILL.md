@@ -1,6 +1,6 @@
 ---
 name: zentao-cli
-description: 通过 zentao 命令行工具查询和操作禅道（ZenTao）数据。当前可用模块以已迁移到 RESTful API v1 的产品、项目、执行、Bug 为准；仍使用 v2 的模块暂不能使用。当用户提到禅道、zentao、查询产品/项目/执行、获取或处理 Bug 等项目管理操作时使用本技能。
+description: 通过 zentao 命令行工具查询和操作禅道（ZenTao）中的产品、项目、执行和 Bug 数据，支持列表、详情、创建、更新、删除，以及 Bug 的确认、激活、关闭和解决。当用户提到禅道、zentao、查询产品/项目/执行、获取或处理 Bug 等项目管理操作时使用本技能。
 license: MIT
 metadata:
   author: Sun Hao <sunhao@chandao.com>
