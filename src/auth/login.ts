@@ -1,6 +1,10 @@
 import { ZentaoClient } from '../api/client.js';
-import type { LoginResponse, ApiResponse, ServerConfig } from '../types/index.js';
+import type { ApiResponse, ServerConfig } from '../types/index.js';
 import { ZentaoError } from '../errors.js';
+
+interface LoginTokenResponse {
+    token?: string;
+}
 
 /** 密码登录成功后的结果 */
 export interface LoginResult {
@@ -18,7 +22,7 @@ export interface EnvCredentials {
 }
 
 /**
- * 使用账号密码调用 `/users/login` 获取 Token，并尽力拉取当前账号的用户详情。
+ * 使用账号密码调用 v1 `/tokens` 获取 Token，并尽力拉取当前账号的用户详情。
  * 用户列表拉取失败不视为致命错误（Token 仍然有效）。
  */
 export async function login(
@@ -28,7 +32,7 @@ export async function login(
     options?: { insecure?: boolean; timeout?: number },
 ): Promise<LoginResult> {
     const url = serverUrl.replace(/\/+$/, '');
-    const baseUrl = `${url}/api.php/v2`;
+    const baseUrl = `${url}/api.php/v1`;
 
     const controller = new AbortController();
     const timeout = options?.timeout ?? 10000;
@@ -39,7 +43,7 @@ export async function login(
     }
 
     try {
-        const response = await fetch(`${baseUrl}/users/login`, {
+        const response = await fetch(`${baseUrl}/tokens`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ account, password }),
@@ -54,8 +58,8 @@ export async function login(
             throw new ZentaoError('E1002', { url });
         }
 
-        const data = await response.json() as LoginResponse;
-        if (data.status !== 'success' || !data.token) {
+        const data = await response.json() as LoginTokenResponse;
+        if (!data.token) {
             throw new ZentaoError('E1003');
         }
 
