@@ -35,10 +35,10 @@ metadata:
 ### 安装
 
 ```bash
-npm install -g zentao-cli
-# 或 bun install -g zentao-cli
-# 或 pnpm install -g zentao-cli
-# 或免安装运行：npx zentao-cli
+npm install -g @singee/zentao-cli
+# 或 bun install -g @singee/zentao-cli
+# 或 pnpm install -g @singee/zentao-cli
+# 或免安装运行：npx @singee/zentao-cli
 ```
 
 如果用户没有安装，引导用户进行全局安装使用，如果系统存在 bun 或 pnpm 则优先使用 bun 或 pnpm 进行全局安装。

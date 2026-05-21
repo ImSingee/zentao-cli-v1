@@ -32,12 +32,12 @@
 
 ```sh
 # 全局安装 zentao-cli 工具
-$ npm install -g zentao-cli
+$ npm install -g @singee/zentao-cli
 
 # 其他安装与运行方式
-# bun install -g zentao-cli  # ← 使用 bun 安装
-# npx zentao-cli             # ← 通过 npx 免安装运行
-# pnpm dlx zentao-cli        # ← 通过 pnpm 免安装运行
+# bun install -g @singee/zentao-cli  # ← 使用 bun 安装
+# npx @singee/zentao-cli             # ← 通过 npx 免安装运行
+# pnpm dlx @singee/zentao-cli        # ← 通过 pnpm 免安装运行
 
 # 安装完成之后可以一键安装技能到 Agents
 $ zentao add-skill

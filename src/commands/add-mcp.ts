@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline';
 import type { GlobalOptions } from '../types/index.js';
 import { getCurrentProfile } from '../config/store.js';
+import { PACKAGE_NAME } from '../utils/update-notifier.js';
 
 /* ── Types ── */
 
@@ -214,7 +215,7 @@ function resolveAgents(agent: string): string[] {
 function buildStandardEntry(creds: McpCredentials) {
     return {
         command: 'npx',
-        args: ['-y', 'zentao-cli', 'mcp'],
+        args: ['-y', PACKAGE_NAME, 'mcp'],
         env: {
             ZENTAO_URL: creds.url,
             ZENTAO_ACCOUNT: creds.account,
@@ -242,7 +243,7 @@ function writeOpenCodeConfig(configPath: string, creds: McpCredentials): void {
     const config = readJsonFile(configPath);
     deepSet(config, ['mcp', MCP_NAME], {
         type: 'local',
-        command: ['npx', '-y', 'zentao-cli', 'mcp'],
+        command: ['npx', '-y', PACKAGE_NAME, 'mcp'],
         env: {
             ZENTAO_URL: creds.url,
             ZENTAO_ACCOUNT: creds.account,
@@ -262,7 +263,7 @@ function writeCodexToml(configPath: string, creds: McpCredentials): void {
     const section = [
         sectionHeader,
         'command = "npx"',
-        'args = ["-y", "zentao-cli", "mcp"]',
+        `args = ["-y", "${tomlEscape(PACKAGE_NAME)}", "mcp"]`,
         `env = { ZENTAO_URL = "${tomlEscape(creds.url)}", ZENTAO_ACCOUNT = "${tomlEscape(creds.account)}", ZENTAO_PASSWORD = "${tomlEscape(creds.password)}" }`,
     ].join('\n') + '\n';
 

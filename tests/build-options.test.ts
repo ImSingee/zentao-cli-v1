@@ -45,7 +45,7 @@ describe('build script target resolution', () => {
 
     test('builds output file names under the configured output directory', () => {
         const options = buildCompileOptions({
-            packageName: 'zentao-cli',
+            packageName: '@singee/zentao-cli',
             outdir: 'release',
             targets: ['darwin-arm64', 'windows-x64'],
         });
@@ -66,14 +66,14 @@ describe('build script target resolution', () => {
 
     test('single explicit outfile is only valid for one target', () => {
         expect(buildCompileOptions({
-            packageName: 'zentao-cli',
+            packageName: '@singee/zentao-cli',
             outdir: 'release',
             outfile: 'release/zentao',
             targets: ['linux-x64'],
         })[0].outfile).toBe('release/zentao');
 
         expect(() => buildCompileOptions({
-            packageName: 'zentao-cli',
+            packageName: '@singee/zentao-cli',
             outdir: 'release',
             outfile: 'release/zentao',
             targets: ['linux-x64', 'darwin-arm64'],

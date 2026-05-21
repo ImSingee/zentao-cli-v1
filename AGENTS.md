@@ -61,7 +61,7 @@ src/
 - `bun run build:sf` — standalone binary for the current platform, output to `release/`.
 - `bun run build:sf -- --targets=all` — standalone binaries for mainstream macOS/Linux/Windows targets.
 - `bun run build:sf -- --targets=linux-x64,darwin-arm64 --outdir ./artifacts` — custom target list and output directory.
-- Published to npm as `zentao-cli`; `files` includes `bin/`, `dist/`, `skills/`.
+- Published to npm as `@singee/zentao-cli`; `files` includes `bin/`, `dist/`, `skills/`.
 
 ## Code Conventions
 

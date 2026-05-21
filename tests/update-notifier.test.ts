@@ -4,6 +4,7 @@ import {
     compareSemver,
     buildInstallCommand,
     PACKAGE_NAME,
+    PACKAGE_REGISTRY_URL,
 } from '../src/utils/update-notifier';
 
 describe('parseSemver', () => {
@@ -69,6 +70,11 @@ describe('compareSemver', () => {
 });
 
 describe('buildInstallCommand', () => {
+    test('uses scoped package metadata URL', () => {
+        expect(PACKAGE_NAME).toBe('@singee/zentao-cli');
+        expect(PACKAGE_REGISTRY_URL).toBe('https://registry.npmjs.org/%40singee%2Fzentao-cli/latest');
+    });
+
     test('returns bun command', () => {
         const { cmd, args } = buildInstallCommand('bun');
         expect(cmd).toBe('bun');

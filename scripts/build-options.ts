@@ -105,6 +105,7 @@ export function getCurrentPlatformTarget({ platform, arch }: PlatformInfo): stri
 
 export function buildCompileOptions(input: BuildCompileInput): CompileTargetOptions[] {
     const resolvedTargets = input.targets.map(resolveTarget);
+    const outputName = packageFileStem(input.packageName);
 
     if (input.outfile && resolvedTargets.length !== 1) {
         throw new Error('--outfile can only be used with a single compile target');
@@ -113,8 +114,12 @@ export function buildCompileOptions(input: BuildCompileInput): CompileTargetOpti
     return resolvedTargets.map((target) => ({
         id: target.id,
         bunTarget: target.bunTarget,
-        outfile: input.outfile ?? join(input.outdir, `${input.packageName}-${outputSuffix(target.id)}${windowsExtension(target.id)}`),
+        outfile: input.outfile ?? join(input.outdir, `${outputName}-${outputSuffix(target.id)}${windowsExtension(target.id)}`),
     }));
+}
+
+function packageFileStem(packageName: string): string {
+    return packageName.split('/').at(-1) ?? packageName;
 }
 
 function resolveTargetIds(values: string[], platformInfo: PlatformInfo): string[] {

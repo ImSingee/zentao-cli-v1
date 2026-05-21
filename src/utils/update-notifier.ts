@@ -2,8 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { getCliVersion } from './version.js';
 
-export const PACKAGE_NAME = 'zentao-cli';
-const REGISTRY_URL = `https://registry.npmjs.org/${PACKAGE_NAME}/latest`;
+export const PACKAGE_NAME = '@singee/zentao-cli';
+export const PACKAGE_REGISTRY_URL = `https://registry.npmjs.org/${encodeURIComponent(PACKAGE_NAME)}/latest`;
 
 export interface SemVer {
     major: number;
@@ -74,7 +74,7 @@ export function compareSemver(a: SemVer, b: SemVer): number {
 export async function fetchLatestVersion(signal?: AbortSignal): Promise<string> {
     let response: Response;
     try {
-        response = await fetch(REGISTRY_URL, {
+        response = await fetch(PACKAGE_REGISTRY_URL, {
             headers: { Accept: 'application/json' },
             signal: signal ?? AbortSignal.timeout(10_000),
         });

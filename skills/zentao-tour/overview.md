@@ -51,10 +51,10 @@ flowchart LR
 优先使用系统中已有的包管理器全局安装：
 
 ```bash
-npm install -g zentao-cli
-# 或 bun install -g zentao-cli
-# 或 pnpm install -g zentao-cli
-# 也可免安装：npx zentao-cli
+npm install -g @singee/zentao-cli
+# 或 bun install -g @singee/zentao-cli
+# 或 pnpm install -g @singee/zentao-cli
+# 也可免安装：npx @singee/zentao-cli
 ```
 
 首次使用登录禅道：
@@ -76,7 +76,7 @@ zentao login -s https://zentao.example.com -u <账号> -p <密码>
   "mcpServers": {
     "zentao": {
       "command": "npx",
-      "args": ["-y", "zentao-cli", "mcp"],
+      "args": ["-y", "@singee/zentao-cli", "mcp"],
       "env": {
         "ZENTAO_URL": "https://zentao.example.com",
         "ZENTAO_ACCOUNT": "<账号>",
