@@ -1,6 +1,6 @@
 ---
 name: zentao-cli
-description: 通过 zentao 命令行工具查询和操作禅道（ZenTao）数据，覆盖项目集、产品、项目、执行、需求、Bug、任务、测试用例、测试单、产品计划、版本、发布、反馈、工单、应用、用户、附件等模块的增删改查及状态流转。当用户提到禅道、zentao、查询项目进展、获取 Bug 列表、创建任务、更新需求状态等项目管理操作时使用本技能。
+description: 通过 zentao 命令行工具查询和操作禅道（ZenTao）数据。当前可用模块以已迁移到 RESTful API v1 的产品、项目、执行、Bug 为准；仍使用 v2 的模块暂不能使用。当用户提到禅道、zentao、查询产品/项目/执行、获取或处理 Bug 等项目管理操作时使用本技能。
 license: MIT
 metadata:
   author: Sun Hao <sunhao@chandao.com>
@@ -12,6 +12,23 @@ metadata:
 # 禅道 CLI
 
 通过 `zentao` 命令行工具查询和操作禅道数据。CLI 自动处理认证、分页，支持工作区上下文和数据过滤/排序。
+
+## API 版本边界
+
+当前只能使用已经迁移到 ZenTao RESTful API v1 的模块。仍停留在 v2 的模块不要使用；如果用户需要这些模块，先说明当前技能不能可靠调用，等待模块迁移到 v1 后再执行。
+
+| 模块名 | 中文 | API 状态 | 使用建议 |
+|--------|------|----------|----------|
+| product | 产品 | v1 可用 | 可列表、详情、创建、更新、删除 |
+| project | 项目 | v1 可用 | 可列表、详情、创建、更新、删除 |
+| execution | 执行/迭代 | v1 可用 | 可按项目列表、详情、创建、更新、删除 |
+| bug | Bug | v1 可用 | 可按产品列表、详情、创建、更新、删除、确认、关闭、激活、解决 |
+| program | 项目集 | 仍为 v2 | 不要使用 |
+| story / epic / requirement | 需求类 | 仍为 v2 | 不要使用 |
+| task | 任务 | 仍为 v2 | 不要使用 |
+| testcase / testtask | 测试类 | 仍为 v2 | 不要使用 |
+| productplan / build / release | 计划、版本、发布 | 仍为 v2 | 不要使用 |
+| feedback / ticket / system / user / file | 反馈、工单、应用、用户、附件 | 仍为 v2 | 不要使用 |
 
 ## 前置准备
 
@@ -70,25 +87,10 @@ zentao login -s https://zentao.example.com -u admin -p 123456
 
 | 模块名 | 中文 | 支持的操作 |
 |--------|------|-----------|
-| program | 项目集 | CRUD |
 | product | 产品 | CRUD |
 | project | 项目 | CRUD |
 | execution | 执行/迭代 | CRUD |
-| story | 需求 | CRUD + activate / change / close |
-| epic | 业务需求 | CRUD + activate / change / close |
-| requirement | 用户需求 | CRUD + activate / change / close |
-| bug | Bug | CRUD + activate / close / resolve |
-| task | 任务 | CRUD + activate / close / finish / start |
-| testcase | 测试用例 | CRUD |
-| testtask | 测试单 | CUD（按产品/项目/执行查列表） |
-| productplan | 产品计划 | CUD（按产品查列表） |
-| build | 版本 | CUD（按项目/执行查列表） |
-| release | 发布 | CUD（按产品查列表） |
-| feedback | 反馈 | CRUD + activate / close |
-| ticket | 工单 | CRUD + activate / close |
-| system | 应用 | CU（按产品查列表） |
-| user | 用户 | CRUD |
-| file | 附件 | 编辑名称 + 删除 |
+| bug | Bug | CRUD + confirm / activate / close / resolve |
 
 > CRUD = 列表 + 详情 + 创建 + 更新 + 删除；CUD = 无独立列表接口，需指定所属范围
 
@@ -97,16 +99,8 @@ zentao login -s https://zentao.example.com -u admin -p 123456
 部分模块的列表需要指定所属范围：
 
 ```bash
-zentao story --product=1                # 产品 #1 的需求
 zentao bug --product=1                  # 产品 #1 的 Bug
-zentao task --execution=1               # 执行 #1 的任务
 zentao execution --project=5            # 项目 #5 的执行
-zentao build --project=5                # 项目 #5 的版本
-zentao testtask --product=1             # 产品 #1 的测试单
-zentao release --product=1              # 产品 #1 的发布
-zentao productplan --product=1          # 产品 #1 的计划
-zentao feedback --product=1             # 产品 #1 的反馈
-zentao ticket --product=1               # 产品 #1 的工单
 ```
 
 设置工作区后可省略这些参数（见下方工作区章节）。
@@ -152,11 +146,20 @@ zentao product --pick=id,name,status
 
 ```bash
 zentao bug --product=1 --filter='status:active'
+zentao bug --product=1 --filter='assignedTo.account:xuan.wang'
 zentao bug --product=1 --filter='severity<=2,pri<=2'    # AND
 zentao bug --product=1 --filter='status:active' --filter='status:resolved'  # OR
 ```
 
 支持的运算符：`:` 等于、`!=` 不等于、`>` `<` `>=` `<=`、`~` 包含、`!~` 不包含。
+
+Bug 指派人筛选要使用嵌套字段路径，不要写 `assignedTo:<account-id>`：
+
+```bash
+zentao bug --product <productID> --filter='assignedTo.account:<account-id>'
+```
+
+`--filter` 是本地过滤，只过滤当前接口返回的数据；需要更完整结果时提高分页大小，例如加 `--recPerPage=100`。
 
 ### 模糊搜索
 
@@ -190,8 +193,7 @@ zentao execution --project=5 --pick=id,name,status
 ### 创建需求并关联计划
 
 ```bash
-zentao story create --product=1 --title="需求标题" --assignedTo=admin --pri=3
-zentao story update 11 --title="需求标题" --plan=1
+当前需求模块仍为 v2，不要使用。
 ```
 
 ### 创建并解决 Bug
@@ -204,16 +206,14 @@ zentao bug resolve 42
 ### 创建、启动并完成任务
 
 ```bash
-zentao task create --execution=1 --name="任务名" --type=devel --assignedTo=admin --estimate=4
-zentao task start 100
-zentao task finish 100 --consumed=4
+当前任务模块仍为 v2，不要使用。
 ```
 
 ### 查看帮助
 
 ```bash
 zentao bug help          # 查看 Bug 模块的参数和操作
-zentao story update help # 查看需求更新操作的参数和操作
+zentao project help      # 查看项目模块的参数和操作
 zentao help              # 查看所有命令
 ```
 
@@ -221,27 +221,15 @@ zentao help              # 查看所有命令
 
 | 用户意图 | CLI 命令 |
 |---------|---------|
-| 所有产品/项目/项目集 | `zentao product` / `zentao project` / `zentao program` |
+| 所有产品/项目 | `zentao product` / `zentao project` |
 | 进行中的项目 | `zentao project --filter='status:doing'` |
 | 某产品的 Bug | `zentao bug --product=<id>` |
-| 某执行的任务 | `zentao task --execution=<id>` |
 | 创建/新增 Bug | `zentao bug create ...` |
 | 解决 Bug | `zentao bug resolve <id>` |
 | 关闭 Bug | `zentao bug close <id>` |
 | 激活 Bug | `zentao bug activate <id>` |
-| 创建需求 | `zentao story create ...` |
-| 变更/关闭/激活需求 | `zentao story change/close/activate <id>` |
-| 业务需求 | `zentao epic ...`（同 story） |
-| 用户需求 | `zentao requirement ...`（同 story） |
-| 创建/启动/完成/关闭任务 | `zentao task create/start/finish/close ...` |
-| 测试用例 | `zentao testcase ...` |
-| 测试单 | `zentao testtask ...` |
-| 产品计划 | `zentao productplan ...` |
-| 版本/Build | `zentao build ...` |
-| 发布 | `zentao release ...` |
-| 反馈 | `zentao feedback ...` |
-| 工单 | `zentao ticket ...` |
-| 用户列表 | `zentao user` |
+| 查询执行 | `zentao execution --project=<projectID>` |
+| 需求/任务/测试/计划/版本等 | 仍为 v2，当前不要使用 |
 | 当前用户信息 | `zentao profile` |
 
 ## 错误处理
