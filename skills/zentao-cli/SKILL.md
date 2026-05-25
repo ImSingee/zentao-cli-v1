@@ -1,6 +1,6 @@
 ---
 name: zentao-cli
-description: 通过 zentao 命令行工具查询和操作禅道（ZenTao）中的产品、项目、执行和 Bug 数据，支持列表、详情、创建、更新、删除，以及 Bug 的确认、激活、关闭和解决。当用户提到禅道、zentao、查询产品/项目/执行、获取或处理 Bug 等项目管理操作时使用本技能。
+description: 通过 zentao 命令行工具查询和操作禅道（ZenTao）中的产品、项目、执行和 Bug 数据，支持列表、详情、创建、更新、删除，以及 Bug 的确认、激活、关闭、解决、指派和评论。当用户提到禅道、zentao、查询产品/项目/执行、获取或处理 Bug 等项目管理操作时使用本技能。
 license: MIT
 metadata:
   author: Sun Hao <sunhao@chandao.com>
@@ -22,7 +22,7 @@ metadata:
 | product | 产品 | v1 可用 | 可列表、详情、创建、更新、删除 |
 | project | 项目 | v1 可用 | 可列表、详情、创建、更新、删除 |
 | execution | 执行/迭代 | v1 可用 | 可按项目列表、详情、创建、更新、删除 |
-| bug | Bug | v1 可用 | 可按产品列表、详情、创建、更新、删除、确认、关闭、激活、解决 |
+| bug | Bug | v1 可用 | 可按产品列表、详情、创建、更新、删除、确认、关闭、激活、解决、指派、评论 |
 | program | 项目集 | 仍为 v2 | 不要使用 |
 | story / epic / requirement | 需求类 | 仍为 v2 | 不要使用 |
 | task | 任务 | 仍为 v2 | 不要使用 |
@@ -90,7 +90,7 @@ zentao login -s https://zentao.example.com -u admin -p 123456
 | product | 产品 | CRUD |
 | project | 项目 | CRUD |
 | execution | 执行/迭代 | CRUD |
-| bug | Bug | CRUD + confirm / activate / close / resolve |
+| bug | Bug | CRUD + confirm / activate / close / resolve / assign / comment |
 
 > CRUD = 列表 + 详情 + 创建 + 更新 + 删除；CUD = 无独立列表接口，需指定所属范围
 
@@ -209,6 +209,22 @@ zentao bug create --product=1 --title="Bug标题" --severity=2 --pri=2 --type=co
 zentao bug resolve 42
 ```
 
+### 指派 Bug
+
+```bash
+zentao bug assign 42 --assignedTo=xiaodong.chen
+zentao bug assign 42 --assignedTo=xuan.wang --comment="已完成验证，指派回原处理人"
+```
+
+### 添加 Bug 评论
+
+```bash
+zentao bug comment 42 --comment="补充说明"
+zentao bug comment 42 --comment=$'原因：复现路径已确认\n修复：已调整边界处理\n修复信息：随下一次发布交付'
+```
+
+`--comment` 会由 CLI 统一进行 HTML escape；不要提前把 `<`、`>`、`&` 等字符手工转义。
+
 ### 创建、启动并完成任务
 
 ```bash
@@ -232,6 +248,8 @@ zentao help              # 查看所有命令
 | 某产品的 Bug | `zentao bug --product=<id>` |
 | 创建/新增 Bug | `zentao bug create ...` |
 | 解决 Bug | `zentao bug resolve <id>` |
+| 指派 Bug | `zentao bug assign <id> --assignedTo=<account>` |
+| 添加 Bug 评论 | `zentao bug comment <id> --comment="..."` |
 | 关闭 Bug | `zentao bug close <id>` |
 | 激活 Bug | `zentao bug activate <id>` |
 | 查询执行 | `zentao execution --project=<projectID>` |
