@@ -332,10 +332,16 @@ $ zentao update product 1 --data='{"name": "产品1"}'
 
 ```bash
 # 解决禅道 BUG #1
-$ zentao bug resolve 1 --comment "已解决"
+$ zentao bug resolve 1 --comment=已解决
 ```
 
 不同对象支持的操作不同，具体可通过 `zentao <moduleName> <action> help` 查看对应模块支持的操作。
+
+如果只想检查将要发送的 HTTP 请求而不实际调用禅道 API，可以追加 `--dry-run`：
+
+```bash
+$ zentao bug resolve 1 --resolution=fixed --comment=已解决 --dry-run
+```
 
 <details>
 <summary>原始方式</summary>
@@ -344,7 +350,7 @@ $ zentao bug resolve 1 --comment "已解决"
 
 ```bash
 # 解决禅道 BUG #1
-$ zentao do bug resolve 1 --comment "已解决"
+$ zentao do bug resolve 1 --comment=已解决
 ```
 
 不同对象支持的操作不同，具体可通过 `zentao do <moduleName> help` 查看对应模块支持的操作。

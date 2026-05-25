@@ -67,10 +67,12 @@ export function resolveModuleCommand(
     }
 
     for (const arg of extraArgs) {
-        const match = arg.match(/^--(\w[\w.-]*)=(.*)$/);
-        if (!match) continue;
-        const key = match[1];
-        let value: unknown = match[2];
+        if (!arg.startsWith('--')) continue;
+        const separatorIndex = arg.indexOf('=');
+        if (separatorIndex <= 2) continue;
+        const key = arg.slice(2, separatorIndex);
+        if (!/^\w[\w.-]*$/.test(key)) continue;
+        let value: unknown = arg.slice(separatorIndex + 1);
         if (value === 'true') value = true;
         else if (value === 'false') value = false;
         else if (/^\d+$/.test(value as string)) value = Number(value);
@@ -333,4 +335,3 @@ export function extractPager(action: ModuleAction, response: Record<string, unkn
     }
     return undefined;
 }
-

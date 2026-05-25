@@ -140,6 +140,35 @@ describe('module resolver', () => {
         expect(command.action.apiVersion).toBe('v1');
     });
 
+    test('only parses dynamic request body fields from --key=value arguments', () => {
+        const mod = getModule('bug')!;
+        const command = resolveModuleCommand(
+            mod,
+            'resolve',
+            {},
+            ['26559', '--resolution=fixed', '--comment', '原因：已修复'],
+        );
+
+        expect(command.path).toBe('/bugs/26559/resolve');
+        expect(command.data).toMatchObject({ resolution: 'fixed' });
+        expect((command.data as Record<string, unknown>).comment).toBeUndefined();
+    });
+
+    test('parses multiline dynamic request body fields from --key=value arguments', () => {
+        const mod = getModule('bug')!;
+        const command = resolveModuleCommand(
+            mod,
+            'resolve',
+            {},
+            ['26559', '--resolution=fixed', '--comment=原因：已修复\n修复：已验证'],
+        );
+
+        expect(command.data).toMatchObject({
+            resolution: 'fixed',
+            comment: '原因：已修复\n修复：已验证',
+        });
+    });
+
     test('throws for unknown action', () => {
         const mod = getModule('bug')!;
         expect(findAction(mod, 'action', 'nonexistent')).toBeUndefined();

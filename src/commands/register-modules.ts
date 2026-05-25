@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { getModuleNames, getModule } from '../modules/index.js';
 import { findAction, getAvailableActions} from '../modules/resolver.js';
-import { ensureAuth } from '../auth/flow.js';
+import { ensureAuth, ensureDryRunAuth } from '../auth/flow.js';
 import { handleModuleCommand, showModuleActionHelp, showModuleHelp } from './module-handler.js';
 import { ZentaoError } from '../errors.js';
 import type { GlobalOptions, ModuleActionName, ModuleActionOptions, ModuleActionType } from '../types/index.js';
@@ -23,6 +23,7 @@ export function addDataOptions(cmd: Command): Command {
         .option('--params <json>', 'API 调用参数')
         .option('--options <json>', 'API 调用选项')
         .option('--yes', '跳过确认')
+        .option('--dry-run', '只打印将要发送的 HTTP 请求，不实际发送')
         .option('--silent', '静默模式')
         .option('--batch-fail-fast', '批量操作出错时停止')
         .option('--id <id>', '对象 ID')
@@ -105,7 +106,10 @@ export function registerModuleCommands(program: Command): void {
                     return;
                 }
 
-                const { client, profile } = await ensureAuth({
+                const { client, profile } = options.dryRun ? ensureDryRunAuth({
+                    insecure: options.insecure,
+                    timeout: options.timeout,
+                }) : await ensureAuth({
                     insecure: options.insecure,
                     timeout: options.timeout,
                 });

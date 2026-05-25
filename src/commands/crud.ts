@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { getModule } from '../modules/index.js';
 import { ZentaoError } from '../errors.js';
-import { ensureAuth } from '../auth/flow.js';
+import { ensureAuth, ensureDryRunAuth } from '../auth/flow.js';
 import { handleModuleCommand } from './module-handler.js';
 import { addDataOptions } from './register-modules.js';
 import type { GlobalOptions, ModuleActionOptions, ModuleName, ModuleActionName } from '../types/index.js';
@@ -101,7 +101,10 @@ async function runCrudCommand(
     const globalOpts = program.opts() as GlobalOptions;
     const options = {...globalOpts, ...opts};
     try {
-        const { client, profile } = await ensureAuth({
+        const { client, profile } = options.dryRun ? ensureDryRunAuth({
+            insecure: globalOpts.insecure,
+            timeout: globalOpts.timeout,
+        }) : await ensureAuth({
             insecure: globalOpts.insecure,
             timeout: globalOpts.timeout,
         });

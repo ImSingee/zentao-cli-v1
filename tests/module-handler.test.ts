@@ -189,3 +189,43 @@ describe('handleModuleCommand raw output', () => {
         expect(output).toEqual([JSON.stringify(rawResponse, null, 4)]);
     });
 });
+
+describe('handleModuleCommand dry run', () => {
+    test('prints the resolved HTTP request without calling the client', async () => {
+        const client = {
+            request: async () => {
+                throw new Error('should not request');
+            },
+        } as unknown as ZentaoClient;
+
+        const output = await captureConsoleLog(async () => {
+            await handleModuleCommand(
+                client,
+                getModule('bug')!,
+                'resolve' as ModuleActionName,
+                ['26559', '--resolution=fixed', '--comment=原因：已修复\n修复：已验证'],
+                mockProfile,
+                { dryRun: true },
+            );
+        });
+
+        expect(output).toEqual([
+            JSON.stringify({
+                method: 'POST',
+                url: 'https://zentao.example.com/api.php/v1/bugs/26559/resolve',
+                headers: {
+                    Token: '<redacted>',
+                    'Content-Type': 'application/json',
+                },
+                body: {
+                    resolution: 'fixed',
+                    duplicateBug: undefined,
+                    resolvedBuild: undefined,
+                    resolvedDate: undefined,
+                    assignedTo: undefined,
+                    comment: '原因：已修复\n修复：已验证',
+                },
+            }, null, 4),
+        ]);
+    });
+});

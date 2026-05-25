@@ -62,6 +62,9 @@ export interface ModuleActionOptions extends GlobalOptions {
     /** 是否跳过确认，适用于 actionType 为 delete 操作 */
     yes?: boolean;
 
+    /** 只打印即将发送的 HTTP 请求，不实际发送 */
+    dryRun?: boolean;
+
     /** 是否静默模式，适用于所有操作  */
     silent?: boolean;
 

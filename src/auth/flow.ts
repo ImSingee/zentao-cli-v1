@@ -88,3 +88,24 @@ export async function ensureAuth(options?: { insecure?: boolean; timeout?: numbe
 
     throw new ZentaoError('E1006');
 }
+
+export function ensureDryRunAuth(options?: { insecure?: boolean; timeout?: number }): AuthContext {
+    const currentProfile = getCurrentProfile();
+    if (currentProfile?.server) {
+        return {
+            client: createAuthenticatedClient(currentProfile, options),
+            profile: currentProfile,
+        };
+    }
+
+    const env = getEnvCredentials();
+    if (env.url) {
+        const profile = buildProfile(env.url, env.account || '<dry-run>', env.token || '<dry-run>');
+        return {
+            client: createAuthenticatedClient(profile, options),
+            profile,
+        };
+    }
+
+    throw new ZentaoError('E1006');
+}

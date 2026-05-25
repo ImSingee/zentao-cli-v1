@@ -3,7 +3,7 @@ import type { ModuleDefinition, ModuleAction, ModuleActionType, Profile, ModuleA
 import { findAction, getAvailableActions, resolveModuleCommand } from '../modules/resolver.js';
 import { executeResolvedModuleCommand } from '../modules/executor.js';
 import { getProfileConfig } from '../config/store.js';
-import { formatOutput } from '../utils/format.js';
+import { formatJson, formatOutput } from '../utils/format.js';
 import type { ModuleActionOptions } from '../types/index.js';
 import { createInterface } from 'node:readline';
 import { renderError, renderObject } from '../utils/render.js';
@@ -50,14 +50,44 @@ function pickBatchIds(args: string[], options: ModuleActionOptions): { ids: stri
     return undefined;
 }
 
+function buildDryRunRequest(command: ResolvedModuleCommand, profile: Profile): Record<string, unknown> {
+    const apiVersion = command.action.apiVersion ?? 'v2';
+    const url = new URL(`${profile.server.replace(/\/+$/, '')}/api.php/${apiVersion}${command.path}`);
+    for (const [key, value] of Object.entries(command.query ?? {})) {
+        if (value === undefined) continue;
+        url.searchParams.set(key, String(value));
+    }
+
+    const request: Record<string, unknown> = {
+        method: command.action.method.toUpperCase(),
+        url: url.toString(),
+        headers: {
+            Token: '<redacted>',
+            'Content-Type': 'application/json',
+        },
+    };
+    if (command.data !== undefined && !['GET', 'HEAD'].includes(command.action.method.toUpperCase())) {
+        request.body = command.data;
+    }
+    return request;
+}
+
 async function renderModuleExecution(
     client: ZentaoClient,
     command: ResolvedModuleCommand,
+    profile: Profile,
     options: ModuleActionOptions,
     config: UserConfig,
 ): Promise<void> {
     const format = options.format ?? config.defaultOutputFormat ?? 'markdown';
     const silent = options.silent ?? config.silent ?? false;
+
+    if (options.dryRun) {
+        if (!silent) {
+            console.log(formatJson(buildDryRunRequest(command, profile), true));
+        }
+        return;
+    }
 
     const execution = await executeResolvedModuleCommand(client, command, options, config);
     if (silent) {
@@ -122,7 +152,7 @@ export async function handleModuleCommand(
 
     const batch = pickBatchIds(args, options);
     if (batch) {
-        if (actionName === 'delete' && !options.yes) {
+        if (actionName === 'delete' && !options.yes && !options.dryRun) {
             if (!await confirmDelete(format, batch.ids.length)) {
                 return;
             }
@@ -155,7 +185,7 @@ export async function handleModuleCommand(
 
     const command = resolveModuleCommand(module, actionName, options, args);
 
-    if (command.action.type === 'delete' && !options.yes) {
+    if (command.action.type === 'delete' && !options.yes && !options.dryRun) {
         if (!await confirmDelete(format, command.id !== undefined ? 1 : 0)) {
             return;
         }
@@ -165,7 +195,7 @@ export async function handleModuleCommand(
         throw new ZentaoError('E2009', { option: 'id', reason: '必须提供要操作的对象 ID' });
     }
 
-    await renderModuleExecution(client, command, options, config);
+    await renderModuleExecution(client, command, profile, options, config);
 }
 
 /**
@@ -269,6 +299,7 @@ export function showModuleHelp(mod: ModuleDefinition): void {
         { name: 'params', placeholder: 'json', description: 'API 调用参数（JSON 对象），可替代单独的 --key=value 传参' },
         { name: 'options', placeholder: 'json', description: 'CLI 调用选项（JSON 对象），可替代单独的公共选项' },
         { name: 'yes', description: '跳过确认提示，适用于 delete 操作' },
+        { name: 'dry-run', description: '只打印将要发送的 HTTP 请求，不实际发送' },
         { name: 'silent', description: '静默模式，不输出任何结果' },
         // { name: 'batch-fail-fast', description: '批量操作遇到错误时立即停止，适用于批量 create/update/delete 操作' },
         { name: 'id', placeholder: 'id', description: '对象 ID，适用于 get/update/delete 操作' },
@@ -401,6 +432,7 @@ export function showModuleActionHelp(mod: ModuleDefinition, action: ModuleAction
     if (action.type === 'delete') {
         commonOpts.push({ name: 'yes', description: '跳过确认提示，直接执行删除' });
     }
+    commonOpts.push({ name: 'dry-run', description: '只打印将要发送的 HTTP 请求，不实际发送' });
     commonOpts.push({ name: 'format', placeholder: 'type', description: '输出格式，支持 markdown、json、raw' });
     commonOpts.push({ name: 'silent', description: '静默模式，不输出任何结果' });
     if (action.type !== 'list' && action.type !== 'get') {

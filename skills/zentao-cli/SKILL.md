@@ -81,7 +81,7 @@ zentao login -s https://zentao.example.com -u admin -p 123456
 | 动作 | `zentao <module> <action> <id>` |
 | 帮助 | `zentao <module> help` |
 
-也支持 `--data='JSON'` 传入 JSON 数据。
+也支持 `--data='JSON'` 传入 JSON 数据。需要检查即将发送的 HTTP 请求但不实际调用 API 时，加 `--dry-run`。
 
 ## 模块与操作速查
 
@@ -118,6 +118,12 @@ AI 场景下执行删除操作时加 `--yes` 跳过确认提示：
 
 ```bash
 zentao bug delete 1 --yes
+```
+
+写操作前需要检查请求体时加 `--dry-run`：
+
+```bash
+zentao bug resolve 42 --resolution=fixed --comment=已解决 --dry-run
 ```
 
 ### 不知道 ID 时
