@@ -38,12 +38,16 @@ export interface LoginResponse extends ApiResponse {
 
 /** API 请求选项 */
 export interface RequestOptions {
+    /** API 入口，默认使用版本化 REST API；web 使用页面路由入口 */
+    endpoint?: 'api' | 'web';
     /** API 版本，默认 v2 */
     apiVersion?: 'v1' | 'v2';
     /** URL 查询参数 */
     query?: Record<string, string | number>;
     /** 请求体（自动序列化为 JSON） */
     body?: unknown;
+    /** 请求体编码格式，默认 json */
+    bodyFormat?: 'json' | 'form';
     /** 单次请求的超时时间（毫秒），覆盖客户端默认值 */
     timeout?: number;
 }

@@ -75,6 +75,12 @@ export type ModuleActionResultRender = (result: unknown, type: ModuleActionResul
 
 /** 模块操作定义 */
 export interface ModuleAction {
+    /** API 入口，默认使用版本化 REST API；web 使用页面路由入口 */
+    endpoint?: 'api' | 'web';
+
+    /** 请求体编码格式，默认 json */
+    bodyFormat?: 'json' | 'form';
+
     /** 操作 API 版本 */
     apiVersion?: 'v1' | 'v2';
 

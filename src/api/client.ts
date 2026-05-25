@@ -42,6 +42,13 @@ export class ZentaoClient {
         return `${this.serverUrl}/api.php/${apiVersion}`;
     }
 
+    private buildRequestUrl(path: string, options?: RequestOptions): string {
+        if (options?.endpoint === 'web') {
+            return `${this.serverUrl}${path}`;
+        }
+        return `${this.getApiBaseUrl(options?.apiVersion)}${path}`;
+    }
+
     /**
      * 发起一次 API 请求。
      * - `status === 'fail'` 的 JSON 响应会抛出 {@link ZentaoError} `E2008`
@@ -61,14 +68,20 @@ export class ZentaoClient {
         options: RequestOptions | undefined,
         allowTokenRefresh: boolean,
     ): Promise<T> {
-        let url = `${this.getApiBaseUrl(options?.apiVersion)}${path}`;
+        let url = this.buildRequestUrl(path, options);
+        const search = new URLSearchParams();
         if (options?.query) {
-            const search = new URLSearchParams();
             for (const [key, value] of Object.entries(options.query)) {
                 if (value === undefined) continue;
                 search.set(key, String(value));
             }
-            url += `?${search.toString()}`;
+        }
+        if (options?.endpoint === 'web') {
+            search.set('zentaosid', this.token);
+        }
+        const queryString = search.toString();
+        if (queryString) {
+            url += `?${queryString}`;
         }
 
         const controller = new AbortController();
@@ -78,6 +91,9 @@ export class ZentaoClient {
             'Token': this.token,
             'Content-Type': 'application/json',
         };
+        if (options?.endpoint === 'web') {
+            headers['X-Requested-With'] = 'XMLHttpRequest';
+        }
 
         const fetchOptions: globalThis.RequestInit = {
             method: method.toUpperCase(),
@@ -86,7 +102,21 @@ export class ZentaoClient {
         };
 
         if (options?.body && !['GET', 'HEAD'].includes(method.toUpperCase())) {
-            fetchOptions.body = JSON.stringify(options.body);
+            if (options.bodyFormat === 'form') {
+                headers['Content-Type'] = 'application/x-www-form-urlencoded';
+                const form = new URLSearchParams();
+                if (typeof options.body === 'object' && options.body !== null && !Array.isArray(options.body)) {
+                    for (const [key, value] of Object.entries(options.body as Record<string, unknown>)) {
+                        if (value === undefined || value === null) continue;
+                        form.set(key, Array.isArray(value) ? value.join(',') : String(value));
+                    }
+                } else {
+                    form.set('data', String(options.body));
+                }
+                fetchOptions.body = form;
+            } else {
+                fetchOptions.body = JSON.stringify(options.body);
+            }
         }
 
         // Node 全局 TLS 开关：仅在本次 fetch 期间生效，在 finally 中恢复，避免污染其他并发请求

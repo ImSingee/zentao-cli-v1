@@ -154,6 +154,42 @@ describe('module executor', () => {
         expect(result.rawResponse).toEqual(rawResponse);
     });
 
+    test('executes web API action commands', async () => {
+        const requests: Array<{ method: string; path: string; options: unknown }> = [];
+        const rawResponse = { status: 'success', data: 123 };
+        const client = {
+            async request(method: string, path: string, options: unknown) {
+                requests.push({ method, path, options });
+                return rawResponse;
+            },
+        } as unknown as ZentaoClient;
+
+        const result = await executeModuleCommand(
+            client,
+            getModule('bug')!,
+            'comment',
+            ['26585', '--comment=CLI 备注'],
+            {},
+            DEFAULT_CONFIG,
+        );
+
+        expect(requests).toEqual([
+            {
+                method: 'post',
+                path: '/bug-edit-26585-1.json',
+                options: {
+                    endpoint: 'web',
+                    bodyFormat: 'form',
+                    query: {},
+                    body: {
+                        comment: 'CLI 备注',
+                    },
+                },
+            },
+        ]);
+        expect(result.data).toEqual(rawResponse);
+    });
+
     test('throws when required write parameters are missing', async () => {
         const client = {
             async request() {

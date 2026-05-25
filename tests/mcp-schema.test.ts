@@ -33,11 +33,11 @@ describe('MCP tool input JSON Schema', () => {
         expect(json.properties && 'params' in json.properties).toBe(true);
     });
 
-    test('converts z.record(z.unknown()) params field', () => {
+    test('converts z.record(z.string(), z.unknown()) params field', () => {
         const actionEnum = ['list', 'get'] as [string, ...string[]];
         const shape = {
             action: z.enum(actionEnum),
-            params: z.record(z.unknown()).optional(),
+            params: z.record(z.string(), z.unknown()).optional(),
         };
 
         const wrapped = objectFromShape(shape);

@@ -44,7 +44,9 @@ export async function executeResolvedModuleCommand(
     config: UserConfig,
 ): Promise<ModuleExecutionResult> {
     const rawResponse = await client.request(command.action.method, command.path, {
+        ...(command.action.endpoint ? { endpoint: command.action.endpoint } : {}),
         ...(command.action.apiVersion ? { apiVersion: command.action.apiVersion } : {}),
+        ...(command.action.bodyFormat ? { bodyFormat: command.action.bodyFormat } : {}),
         query: command.query,
         body: command.data,
     }) as Record<string, unknown>;

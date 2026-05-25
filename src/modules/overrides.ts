@@ -499,6 +499,55 @@ const bugActions: ModuleAction[] = [
     },
     {
         apiVersion: 'v1',
+        name: 'assign',
+        display: '指派Bug',
+        type: 'action',
+        method: 'post',
+        path: '/bugs/{bugID}/assign',
+        resultType: 'object',
+        pathParams: {
+            bugID: 'Bug ID',
+        },
+        requestBody: {
+            required: true,
+            type: 'object',
+            schema: {
+                type: 'object',
+                properties: {
+                    assignedTo: { type: 'string', description: '指派给' },
+                    mailto: { type: 'array', items: { type: 'string' }, description: '抄送给' },
+                    comment: { type: 'string', description: '备注' },
+                },
+                required: ['assignedTo'],
+            },
+        },
+    },
+    {
+        endpoint: 'web',
+        name: 'comment',
+        display: '添加Bug备注',
+        type: 'action',
+        method: 'post',
+        path: '/bug-edit-{bugID}-1.json',
+        bodyFormat: 'form',
+        resultType: 'object',
+        pathParams: {
+            bugID: 'Bug ID',
+        },
+        requestBody: {
+            required: true,
+            type: 'object',
+            schema: {
+                type: 'object',
+                properties: {
+                    comment: { type: 'string', description: '备注' },
+                },
+                required: ['comment'],
+            },
+        },
+    },
+    {
+        apiVersion: 'v1',
         name: 'resolve',
         display: '解决Bug',
         type: 'action',
@@ -530,7 +579,7 @@ const bugActions: ModuleAction[] = [
 const BUG_V1_MODULE: ModuleDefinition = {
     name: 'bug',
     display: 'Bug',
-    description: 'Bug管理，使用禅道 RESTful API v1，支持获取产品Bug列表、创建Bug、获取Bug详情、修改Bug、删除Bug、确认Bug、关闭Bug、激活Bug、解决Bug',
+    description: 'Bug管理，使用禅道 RESTful API v1，支持获取产品Bug列表、创建Bug、获取Bug详情、修改Bug、删除Bug、确认Bug、关闭Bug、激活Bug、指派Bug、添加备注、解决Bug',
     actions: bugActions,
 };
 

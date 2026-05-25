@@ -44,7 +44,9 @@ import type { Workspace } from '../src/types/config';
         expect(actions).toContain('close');
         expect(actions).toContain('activate');
         expect(actions).toContain('confirm');
-        expect(bug.actions.every((a) => a.apiVersion === 'v1')).toBe(true);
+        expect(actions).toContain('assign');
+        expect(actions).toContain('comment');
+        expect(bug.actions.every((a) => a.apiVersion === 'v1' || a.endpoint === 'web')).toBe(true);
     });
 
     test('task module has correct actions', () => {
@@ -196,6 +198,41 @@ describe('module resolver', () => {
         expect(command.data).toMatchObject({
             resolution: 'external',
             comment: '&lt;think&gt;外部原因&lt;/think&gt;',
+        });
+    });
+
+    test('resolves v1 bug assign action', () => {
+        const mod = getModule('bug')!;
+        const command = resolveModuleCommand(
+            mod,
+            'assign',
+            {},
+            ['26585', '--assignedTo=dev1', '--comment=临时指派'],
+        );
+
+        expect(command.path).toBe('/bugs/26585/assign');
+        expect(command.action.apiVersion).toBe('v1');
+        expect(command.data).toMatchObject({
+            assignedTo: 'dev1',
+            comment: '临时指派',
+        });
+    });
+
+    test('resolves bug comment through web API entry', () => {
+        const mod = getModule('bug')!;
+        const command = resolveModuleCommand(
+            mod,
+            'comment',
+            {},
+            ['26585', '--comment=CLI 备注'],
+        );
+
+        expect(command.path).toBe('/bug-edit-26585-1.json');
+        expect(command.action.endpoint).toBe('web');
+        expect(command.action.bodyFormat).toBe('form');
+        expect(command.query).toEqual({});
+        expect(command.data).toMatchObject({
+            comment: 'CLI 备注',
         });
     });
 

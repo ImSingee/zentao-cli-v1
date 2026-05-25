@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { ZodRawShapeCompat } from '@modelcontextprotocol/sdk/server/zod-compat.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { MODULES } from '../modules/index.js';
 import type { ModuleDefinition, ModuleAction, ModuleActionOptions } from '../types/index.js';
@@ -40,7 +41,7 @@ function buildActionEnum(mod: ModuleDefinition): [string, ...string[]] {
     return [names[0], ...names.slice(1)];
 }
 
-function buildInputSchema(mod: ModuleDefinition) {
+function buildInputSchema(mod: ModuleDefinition): ZodRawShapeCompat {
     const actionEnum = buildActionEnum(mod);
     return {
         action: z.enum(actionEnum).describe('要执行的操作。' + mod.actions.map(a =>
@@ -58,7 +59,7 @@ function buildInputSchema(mod: ModuleDefinition) {
         searchFields: z.string().optional().describe('搜索字段（逗号分隔），配合 search 使用'),
         page: z.number().optional().describe('页码'),
         recPerPage: z.number().optional().describe('每页条数'),
-    };
+    } as unknown as ZodRawShapeCompat;
 }
 
 interface ToolInput {
@@ -209,7 +210,7 @@ export function registerModuleTools(server: McpServer, auth: AuthProvider): void
         '切换当前登录账号（等价于 switch-profile）',
         {
             profileKey: z.string().describe('目标用户配置标识，支持 account@server、account 或 account@hostname'),
-        },
+        } as unknown as ZodRawShapeCompat,
         { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
         async (input) => {
             try {

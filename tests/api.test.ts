@@ -75,6 +75,38 @@ describe('ZentaoClient HTTP behavior', () => {
         expect(receivedPath).toBe('/api.php/v1/bugs/1');
     });
 
+    test('can request web endpoints with session id query and form body', async () => {
+        let receivedUrl: string | undefined;
+        let receivedToken: string | undefined;
+        let receivedAjaxHeader: string | undefined;
+        let receivedBody: string | undefined;
+        const server = createMockServer(async (req) => {
+            receivedUrl = req.url;
+            receivedToken = req.headers.get('Token') ?? undefined;
+            receivedAjaxHeader = req.headers.get('X-Requested-With') ?? undefined;
+            receivedBody = await req.text();
+            return Response.json({ status: 'success', data: 123 });
+        });
+
+        try {
+            const client = makeClient(server, 'session-token');
+            await client.request('post', '/bug-edit-26585-1.json', {
+                endpoint: 'web',
+                bodyFormat: 'form',
+                body: { comment: 'CLI 备注' },
+            });
+        } finally {
+            server.stop();
+        }
+
+        const url = new URL(receivedUrl!);
+        expect(url.pathname).toBe('/bug-edit-26585-1.json');
+        expect(url.searchParams.get('zentaosid')).toBe('session-token');
+        expect(receivedToken).toBe('session-token');
+        expect(receivedAjaxHeader).toBe('XMLHttpRequest');
+        expect(receivedBody).toBe('comment=CLI+%E5%A4%87%E6%B3%A8');
+    });
+
     test('setToken updates token for subsequent requests', async () => {
         let receivedToken: string | undefined;
         const server = createMockServer((req) => {

@@ -51,11 +51,16 @@ function pickBatchIds(args: string[], options: ModuleActionOptions): { ids: stri
 }
 
 function buildDryRunRequest(command: ResolvedModuleCommand, profile: Profile): Record<string, unknown> {
+    const endpoint = command.action.endpoint ?? 'api';
     const apiVersion = command.action.apiVersion ?? 'v2';
-    const url = new URL(`${profile.server.replace(/\/+$/, '')}/api.php/${apiVersion}${command.path}`);
+    const base = profile.server.replace(/\/+$/, '');
+    const url = new URL(endpoint === 'web' ? `${base}${command.path}` : `${base}/api.php/${apiVersion}${command.path}`);
     for (const [key, value] of Object.entries(command.query ?? {})) {
         if (value === undefined) continue;
         url.searchParams.set(key, String(value));
+    }
+    if (endpoint === 'web') {
+        url.searchParams.set('zentaosid', '<redacted>');
     }
 
     const request: Record<string, unknown> = {
@@ -63,7 +68,8 @@ function buildDryRunRequest(command: ResolvedModuleCommand, profile: Profile): R
         url: url.toString(),
         headers: {
             Token: '<redacted>',
-            'Content-Type': 'application/json',
+            'Content-Type': command.action.bodyFormat === 'form' ? 'application/x-www-form-urlencoded' : 'application/json',
+            ...(endpoint === 'web' ? { 'X-Requested-With': 'XMLHttpRequest' } : {}),
         },
     };
     if (command.data !== undefined && !['GET', 'HEAD'].includes(command.action.method.toUpperCase())) {
