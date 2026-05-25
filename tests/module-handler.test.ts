@@ -203,7 +203,7 @@ describe('handleModuleCommand dry run', () => {
                 client,
                 getModule('bug')!,
                 'resolve' as ModuleActionName,
-                ['26559', '--resolution=fixed', '--comment=原因：已修复\n修复：已验证'],
+                ['26559', '--resolution=fixed', '--comment=原因：<think>已修复</think>\n修复：已验证'],
                 mockProfile,
                 { dryRun: true },
             );
@@ -223,7 +223,7 @@ describe('handleModuleCommand dry run', () => {
                     resolvedBuild: undefined,
                     resolvedDate: undefined,
                     assignedTo: undefined,
-                    comment: '原因：已修复\n修复：已验证',
+                    comment: '原因：&lt;think&gt;已修复&lt;/think&gt;\n修复：已验证',
                 },
             }, null, 4),
         ]);

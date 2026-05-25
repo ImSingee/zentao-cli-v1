@@ -169,6 +169,36 @@ describe('module resolver', () => {
         });
     });
 
+    test('html encodes request body comments before submission', () => {
+        const mod = getModule('bug')!;
+        const command = resolveModuleCommand(
+            mod,
+            'resolve',
+            {},
+            ['26559', '--resolution=external', '--comment=原因：<think>上游</think> & "不予解决"'],
+        );
+
+        expect(command.data).toMatchObject({
+            resolution: 'external',
+            comment: '原因：&lt;think&gt;上游&lt;/think&gt; &amp; &quot;不予解决&quot;',
+        });
+    });
+
+    test('html encodes request body comments from command options', () => {
+        const mod = getModule('bug')!;
+        const command = resolveModuleCommand(
+            mod,
+            'resolve',
+            { resolution: 'external', comment: '<think>外部原因</think>' } as any,
+            ['26559'],
+        );
+
+        expect(command.data).toMatchObject({
+            resolution: 'external',
+            comment: '&lt;think&gt;外部原因&lt;/think&gt;',
+        });
+    });
+
     test('throws for unknown action', () => {
         const mod = getModule('bug')!;
         expect(findAction(mod, 'action', 'nonexistent')).toBeUndefined();

@@ -7,6 +7,24 @@ const ACTION_NAME_ALIASES: Record<string, string> = {
 };
 
 const CRUD_TYPES = new Set<string>(['list', 'get', 'create', 'update', 'delete']);
+const HTML_ESCAPE_MAP: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+};
+
+function escapeHtml(value: string): string {
+    return value.replace(/[&<>"']/g, (char) => HTML_ESCAPE_MAP[char]);
+}
+
+function encodeRequestBodyComment(data: string | Record<string, unknown> | undefined): void {
+    if (!data || typeof data !== 'object') return;
+    if (typeof data.comment === 'string') {
+        data.comment = escapeHtml(data.comment);
+    }
+}
 
 /**
  * 解析模块命令信息：
@@ -222,6 +240,7 @@ export function resolveModuleCommand(
             (data as Record<string, unknown>)[key] = value;
         });
     }
+    encodeRequestBodyComment(data);
 
     return { module: module.name, action, params, path, query, data, id };
 }
