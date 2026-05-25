@@ -201,6 +201,23 @@ describe('module resolver', () => {
         });
     });
 
+    test('html encodes request body comments for every bug comment action', () => {
+        const mod = getModule('bug')!;
+        const actionArgs: Record<string, string[]> = {
+            confirm: ['26559', '--comment=<script>alert(1)</script> & "确认"'],
+            close: ['26559', '--comment=<script>alert(1)</script> & "关闭"'],
+            activate: ['26559', '--comment=<script>alert(1)</script> & "激活"'],
+            assign: ['26559', '--assignedTo=dev1', '--comment=<script>alert(1)</script> & "指派"'],
+            comment: ['26559', '--comment=<script>alert(1)</script> & "备注"'],
+            resolve: ['26559', '--resolution=fixed', '--comment=<script>alert(1)</script> & "解决"'],
+        };
+
+        for (const [action, args] of Object.entries(actionArgs)) {
+            const command = resolveModuleCommand(mod, action, {}, args);
+            expect((command.data as Record<string, unknown>).comment).toStartWith('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;');
+        }
+    });
+
     test('resolves v1 bug assign action', () => {
         const mod = getModule('bug')!;
         const command = resolveModuleCommand(
