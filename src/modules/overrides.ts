@@ -563,7 +563,10 @@ const bugActions: ModuleAction[] = [
             schema: {
                 type: 'object',
                 properties: {
-                    resolution: { type: 'string', description: '解决方案' },
+                    resolution: {
+                        type: 'string',
+                        description: '解决方案(fixed 已解决 | notrepro 无法重现 | bydesign 设计如此 | duplicate 重复Bug | external 外部原因 | postponed 延期处理 | willnotfix 不予解决 | tostory 转为需求)',
+                    },
                     duplicateBug: { type: 'integer', description: '重复Bug ID' },
                     resolvedBuild: { type: 'string', description: '解决版本' },
                     resolvedDate: { type: 'string', description: '解决时间' },

@@ -123,7 +123,7 @@ zentao bug delete 1 --yes
 写操作前需要检查请求体时加 `--dry-run`：
 
 ```bash
-zentao bug resolve 42 --resolution=fixed --comment=已解决 --dry-run
+zentao bug resolve 42 --resolution=fixed --resolvedBuild=trunk --comment=已解决 --dry-run
 ```
 
 ### 不知道 ID 时
@@ -206,7 +206,25 @@ zentao execution --project=5 --pick=id,name,status
 
 ```bash
 zentao bug create --product=1 --title="Bug标题" --severity=2 --pri=2 --type=codeerror --openedBuild=trunk
-zentao bug resolve 42
+zentao bug resolve 42 --resolution=fixed --resolvedBuild=trunk --comment="已修复"
+```
+
+`zentao bug resolve --resolution` 可选值：
+
+| 值 | 含义 | 备注 |
+|----|------|------|
+| `fixed` | 已解决 | 需要 `--resolvedBuild`，主干用 `trunk` |
+| `notrepro` | 无法重现 |  |
+| `bydesign` | 设计如此 |  |
+| `duplicate` | 重复 Bug | 需要 `--duplicateBug=<bugID>` |
+| `external` | 外部原因 |  |
+| `postponed` | 延期处理 |  |
+| `willnotfix` | 不予解决 |  |
+| `tostory` | 转为需求 |  |
+
+```bash
+zentao bug resolve 42 --resolution=duplicate --duplicateBug=12345 --comment="重复问题"
+zentao bug resolve 42 --resolution=external --comment="外部依赖导致"
 ```
 
 ### 指派 Bug
